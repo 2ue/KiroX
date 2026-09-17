@@ -19,7 +19,7 @@ func (r *Registrar) Step11CreateIdentity(otp string) error {
 	ref := fmt.Sprintf("%s/?workflowID=%s", r.Cfg.ProfileBase, r.WorkflowID)
 	fp := r.GenFP("profile", "EmailVerification", 0, "")
 
-	body, _, _, err := r.DoPostRaw(r.Cfg.ProfileBase+"/api/create-identity", map[string]interface{}{
+	body, status, _, err := r.DoPostRaw(r.Cfg.ProfileBase+"/api/create-identity", map[string]interface{}{
 		"workflowState": r.WorkflowState,
 		"userData":      map[string]string{"email": r.Email, "fullName": r.Cfg.FullName},
 		"otpCode":       otp,
@@ -38,6 +38,14 @@ func (r *Registrar) Step11CreateIdentity(otp string) error {
 	}, r.BuildProfileHeaders(ref))
 	if err != nil {
 		return err
+	}
+	if status != 200 {
+		bodyText := string(body)
+		if len(bodyText) > 800 {
+			bodyText = bodyText[:800]
+		}
+		log.Printf("[11] create-identity 失败: status=%d, url=%s, body=%s", status, safeResponseRoute(r.Cfg.ProfileBase+"/api/create-identity"), bodyText)
+		return unexpectedServiceResponse("create-identity 失败", body)
 	}
 
 	var data map[string]interface{}

@@ -25,7 +25,7 @@ type StartTaskRequest struct {
 	Concurrency       int                              `json:"concurrency"`
 	Delay             int                              `json:"delay"`
 	OutputPath        string                           `json:"outputPath"`
-	EmailProvider     string                           `json:"emailProvider"`     // "outlook" / "moemail" / "cloudmail"
+	EmailProvider     string                           `json:"emailProvider"`     // "outlook" / "moemail" / "cloudmail" / "mailnest" / "mailalias" / "icloud"
 	MoeMailDomains    []string                         `json:"moemailDomains"`    // 选中的域名列表
 	MoeMailConfigs    map[string][]email.MoeMailConfig `json:"moemailConfigs"`    // 域名 -> 配置列表映射
 	MoeMailRandomMode bool                             `json:"moemailRandomMode"` // 是否为随机模式
@@ -34,7 +34,8 @@ type StartTaskRequest struct {
 	CloudMailConfigs    map[string][]email.CloudMailConfig `json:"cloudmailConfigs"`
 	CloudMailRandomMode bool                               `json:"cloudmailRandomMode"`
 
-	MailNestConfig email.MailNestConfig `json:"mailNestConfig"`
+	MailNestConfig  email.MailNestConfig  `json:"mailNestConfig"`
+	MailAliasConfig email.MailAliasConfig `json:"mailAliasConfig"`
 
 	// Proxy 本次任务使用的代理（用户在新建任务时选择，空=直连）
 	Proxy           string `json:"proxy"`
@@ -103,6 +104,16 @@ func startTask(req StartTaskRequest) map[string]interface{} {
 		if config == (email.MailNestConfig{}) {
 			Manager.mu.Unlock()
 			return map[string]interface{}{"error": "请先配置 MailNest"}
+		}
+	} else if emailProvider == "mailalias" {
+		config := req.MailAliasConfig
+		if !email.MailAliasConfigReady(config) {
+			config = email.GetMailAliasConfig()
+			req.MailAliasConfig = config
+		}
+		if !email.MailAliasConfigReady(config) {
+			Manager.mu.Unlock()
+			return map[string]interface{}{"error": "请先配置 Gmail 临时邮箱"}
 		}
 	} else if emailProvider == "icloud" {
 		// iCloud 模式：加载账号列表
@@ -215,6 +226,7 @@ func runBatch(batch *taskBatch, req StartTaskRequest, emailProvider string, outl
 	os.MkdirAll(outDir, 0755)
 
 	taskConfig := core.NewConfig()
+	taskConfig.Debug = true
 	taskConfig.OIDCBase = settings.OIDCBase
 	taskConfig.SigninBase = settings.SigninBase
 	taskConfig.ProfileBase = settings.ProfileBase
@@ -300,6 +312,8 @@ func runBatch(batch *taskBatch, req StartTaskRequest, emailProvider string, outl
 		taskConfig.UseOutlook = true
 	} else if emailProvider == "mailnest" {
 		taskConfig.UseMailNest = true
+	} else if emailProvider == "mailalias" {
+		taskConfig.UseMailAlias = true
 	}
 
 	// 预先准备 CloudMail 域名池
@@ -474,6 +488,23 @@ func runBatch(batch *taskBatch, req StartTaskRequest, emailProvider string, outl
 			taskCfg.MailNestProvider = provider
 			cfgCopy := config
 			taskCfg.MailNestConfig = &cfgCopy
+			currentEmail = address
+		} else if emailProvider == "mailalias" {
+			config := req.MailAliasConfig
+			provider := email.NewMailAliasProviderContextWithProxy(taskCtx, config, taskConfig.EmailProxy)
+			log.Printf("[Kiro][%d/%d] 创建 Gmail 临时邮箱", i+1, req.Count)
+			address, err := provider.GetAddress()
+			if err != nil {
+				log.Printf("[Kiro][%d/%d] 生成 Gmail 临时邮箱失败: %v", i+1, req.Count, err)
+				Manager.mu.Lock()
+				Manager.completed++
+				Manager.failed++
+				Manager.mu.Unlock()
+				return
+			}
+			taskCfg.MailAliasProvider = provider
+			cfgCopy := config
+			taskCfg.MailAliasConfig = &cfgCopy
 			currentEmail = address
 		} else if emailProvider == "icloud" {
 			// iCloud 模式：从共享池领取账号

@@ -33,6 +33,16 @@ func TestParseServiceErrorRedactsCaptchaAndRepairsMessage(t *testing.T) {
 	}
 }
 
+func TestParseServiceErrorFlatTESBlocked(t *testing.T) {
+	err := parseServiceError([]byte(`{"errorCode":"BLOCKED","message":"Request was blocked by TES."}`))
+	if err == nil {
+		t.Fatal("expected a parsed TES error")
+	}
+	if err.Code != "BLOCKED" || err.Message != "Request was blocked by TES." {
+		t.Fatalf("unexpected TES error: %#v", err)
+	}
+}
+
 func TestRepairMojibakeLeavesUTF8TextAlone(t *testing.T) {
 	for _, value := range []string{"请稍后重试", "café", "plain text"} {
 		if got := repairMojibake(value); got != value {

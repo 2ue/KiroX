@@ -93,6 +93,11 @@ func WarmAppJSConfig(proxy, chromeVer, userAgent, secUA string) {
 			if ver != "" {
 				cfg.Version = ver
 			}
+			if key != nil {
+				log.Printf("[xxtea] 已从 app.js 提取密钥 TES=%s identifier=%s", cfg.Version, cfg.Identifier)
+			} else {
+				log.Println("[xxtea] app.js 已下载但未能提取密钥")
+			}
 		}
 		if cfg.Key == [4]uint32{} {
 			log.Println("[xxtea] 使用 fallback 密钥")
@@ -193,18 +198,23 @@ func xxteaEncrypt(plaintext string, key [4]uint32) []byte {
 }
 
 // The deadline covers both receiving headers and reading the response body.
-const appJSFetchTimeout = 15 * time.Second
+// AWS sign-in app.js is a multi-megabyte bundle; slow links need minutes, not 15s.
+const appJSFetchTimeout = 180 * time.Second
 
 func fetchAppJS(proxy, chromeVer, userAgent, secUA string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), appJSFetchTimeout)
 	defer cancel()
-	client := httputil.NewTLSClient(proxy, true, chromeVer)
+	timeoutSec := int(appJSFetchTimeout / time.Second)
+	log.Printf("[xxtea] 开始下载 app.js，超时 %s", appJSFetchTimeout)
+	start := time.Now()
+	client := httputil.NewTLSClientWithTimeout(proxy, true, timeoutSec, chromeVer)
 	defer client.CloseIdleConnections()
 	js, err := downloadAppJS(ctx, client, appJSRequestHeaders(chromeVer, userAgent, secUA))
 	if err != nil {
-		log.Printf("[xxtea] 下载 app.js 失败: %v", err)
+		log.Printf("[xxtea] 下载 app.js 失败: %v (耗时 %s)", err, time.Since(start).Round(time.Millisecond))
 		return ""
 	}
+	log.Printf("[xxtea] 下载 app.js 完成: %d bytes, 耗时 %s", len(js), time.Since(start).Round(time.Millisecond))
 	return js
 }
 
@@ -247,6 +257,7 @@ func appJSRequestHeaders(chromeVer, userAgent, secUA string) map[string]string {
 		"User-Agent":      userAgent,
 		"Accept":          "*/*",
 		"Accept-Language": "en-US,en;q=0.9",
+		"Accept-Encoding": "gzip, deflate, br",
 		"Referer":         "https://us-east-1.signin.aws/",
 		"sec-ch-ua":       secUA,
 		"sec-fetch-dest":  "script",

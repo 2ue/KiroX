@@ -354,9 +354,11 @@ func (r *Registrar) Step9SendOTP() error {
 		return err
 	}
 	if status != 200 {
-		if r.Cfg.Debug {
-			log.Printf("[DEBUG] send-otp 失败: status=%d, body=%s, fp_len=%d", status, string(respBody), len(fp))
+		bodyText := string(respBody)
+		if len(bodyText) > 800 {
+			bodyText = bodyText[:800]
 		}
+		log.Printf("[9] send-otp 失败: status=%d, fp_len=%d, url=%s, body=%s", status, len(fp), safeResponseRoute(r.Cfg.ProfileBase+"/api/send-otp"), bodyText)
 		return fmt.Errorf("send-otp 失败 (%d)", status)
 	}
 	r.ProfileVerificationStartedAt = time.Now()

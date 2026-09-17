@@ -78,35 +78,50 @@ func parseAWSWAFChallenge(body []byte) (awsWAFChallenge, bool) {
 
 func parseServiceError(body []byte) *ServiceError {
 	var response serviceErrorResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil
+	if err := json.Unmarshal(body, &response); err == nil {
+		requestID := response.Message.RequestID
+		if requestID == "" {
+			requestID = response.RequestID
+		}
+		captcha := response.CaptchaResponse.CaptchaURL != "" ||
+			response.CaptchaResponse.CaptchaCES != "" ||
+			response.CaptchaResponse.CaptchaToken != "" ||
+			response.CaptchaResponse.CaptchaCDN != ""
+		code := strings.TrimSpace(response.Message.ErrorCode)
+		message := repairMojibake(strings.TrimSpace(response.Message.Text))
+		if message == "" {
+			message = repairMojibake(strings.TrimSpace(response.Message.Heading))
+		}
+		if code == "" && captcha {
+			code = "CAPTCHA_REQUIRED"
+		}
+		if code != "" || message != "" || captcha {
+			return &ServiceError{
+				Code:      code,
+				Message:   message,
+				RequestID: requestID,
+				Captcha:   captcha,
+			}
+		}
 	}
 
-	requestID := response.Message.RequestID
-	if requestID == "" {
-		requestID = response.RequestID
+	var flat struct {
+		ErrorCode string `json:"errorCode"`
+		Message   string `json:"message"`
+		RequestID string `json:"requestId"`
 	}
-	captcha := response.CaptchaResponse.CaptchaURL != "" ||
-		response.CaptchaResponse.CaptchaCES != "" ||
-		response.CaptchaResponse.CaptchaToken != "" ||
-		response.CaptchaResponse.CaptchaCDN != ""
-	code := strings.TrimSpace(response.Message.ErrorCode)
-	message := repairMojibake(strings.TrimSpace(response.Message.Text))
-	if message == "" {
-		message = repairMojibake(strings.TrimSpace(response.Message.Heading))
-	}
-	if code == "" && captcha {
-		code = "CAPTCHA_REQUIRED"
-	}
-	if code == "" && message == "" && !captcha {
+	if err := json.Unmarshal(body, &flat); err != nil {
 		return nil
 	}
-
+	code := strings.TrimSpace(flat.ErrorCode)
+	message := strings.TrimSpace(flat.Message)
+	if code == "" && message == "" {
+		return nil
+	}
 	return &ServiceError{
 		Code:      code,
 		Message:   message,
-		RequestID: requestID,
-		Captcha:   captcha,
+		RequestID: strings.TrimSpace(flat.RequestID),
 	}
 }
 

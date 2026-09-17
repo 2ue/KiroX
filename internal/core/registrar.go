@@ -212,6 +212,7 @@ func (r *Registrar) DoPost(url string, payload interface{}, headers map[string]s
 		}
 		defer resp.Body.Close()
 		data, err := io.ReadAll(resp.Body)
+		r.logDebugHTTP("POST", url, resp.StatusCode, data)
 		return data, resp.Header, err
 	}
 	return nil, nil, lastErr
@@ -253,6 +254,7 @@ func (r *Registrar) DoGet(url string, headers map[string]string) ([]byte, int, m
 		}
 		defer resp.Body.Close()
 		data, err := io.ReadAll(resp.Body)
+		r.logDebugHTTP("GET", url, resp.StatusCode, data)
 		return data, resp.StatusCode, resp.Header, err
 	}
 	return nil, 0, nil, lastErr
@@ -280,6 +282,7 @@ func (r *Registrar) DoPostBodyRaw(url string, rawBody string, headers map[string
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
+	r.logDebugHTTP("POST", url, resp.StatusCode, data)
 	return data, resp.StatusCode, resp.Header, err
 }
 
@@ -327,9 +330,24 @@ func (r *Registrar) DoPostRaw(url string, payload interface{}, headers map[strin
 		}
 		defer resp.Body.Close()
 		data, err := io.ReadAll(resp.Body)
+		r.logDebugHTTP("POST", url, resp.StatusCode, data)
 		return data, resp.StatusCode, resp.Header, err
 	}
 	return nil, 0, nil, lastErr
+}
+
+func (r *Registrar) logDebugHTTP(method, rawURL string, status int, body []byte) {
+	if r.Cfg == nil || !r.Cfg.Debug {
+		return
+	}
+	bodyText := strings.TrimSpace(string(body))
+	if len(bodyText) > 800 {
+		bodyText = bodyText[:800] + "..."
+	}
+	if bodyText == "" {
+		bodyText = "<empty>"
+	}
+	log.Printf("[DEBUG] %s %s -> %d %s", method, safeResponseRoute(rawURL), status, bodyText)
 }
 
 // GenFP 生成指纹
@@ -436,6 +454,13 @@ func (r *Registrar) Step3Email() error {
 	if r.Cfg.UseMailNest && r.Cfg.MailNestProvider != nil {
 		log.Println("[3] 使用 MailNest 邮箱")
 		r.EmailSvc = email.NeMailNestServiceFromProvider(r.Cfg.MailNestProvider)
+		r.Email = r.EmailSvc.GetAddress()
+		log.Printf("email=%s", r.Email)
+		return nil
+	}
+	if r.Cfg.UseMailAlias && r.Cfg.MailAliasProvider != nil {
+		log.Println("[3] 使用 Gmail 临时邮箱")
+		r.EmailSvc = email.NewMailAliasServiceFromProvider(r.Cfg.MailAliasProvider)
 		r.Email = r.EmailSvc.GetAddress()
 		log.Printf("email=%s", r.Email)
 		return nil

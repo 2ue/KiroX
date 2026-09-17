@@ -51,6 +51,10 @@ type Config struct {
 	MailNestConfig   *email.MailNestConfig
 	MailNestProvider *email.MailNestProvider
 
+	UseMailAlias      bool
+	MailAliasConfig   *email.MailAliasConfig
+	MailAliasProvider *email.MailAliasProvider
+
 	UseICloud     bool
 	ICloudCSV     string
 	ICloudAccount *email.ICloudAccount

@@ -247,6 +247,20 @@ func (a *App) GetMailNestConfig() email.MailNestConfig {
 	return email.GetMailNestConfig()
 }
 
+// ---- MailAlias (Gmail 临时邮箱) ----
+
+func (a *App) TestMailAliasConnection(configJSON string) map[string]interface{} {
+	return email.TestMailAliasConnection(configJSON)
+}
+
+func (a *App) SaveMailAliasConfig(configsJSON string) map[string]interface{} {
+	return email.SaveMailAliasConfig(configsJSON)
+}
+
+func (a *App) GetMailAliasConfig() email.MailAliasConfig {
+	return email.GetMailAliasConfig()
+}
+
 // SelectDirectory 选择目录 (Wails Dialog)
 func (a *App) SelectDirectory() string {
 	path, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{

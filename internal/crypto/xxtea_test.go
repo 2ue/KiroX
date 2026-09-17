@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -154,6 +155,31 @@ func TestDownloadAppJSRejectsErrorResponses(t *testing.T) {
 	}), nil)
 	if err == nil || js != "" {
 		t.Fatalf("accepted an HTTP error page: js=%q, err=%v", js, err)
+	}
+}
+
+func TestAppJSFetchTimeoutAllowsSlowLinks(t *testing.T) {
+	if appJSFetchTimeout < 2*time.Minute {
+		t.Fatalf("appJSFetchTimeout = %s, want at least 2m for the multi-megabyte AWS bundle", appJSFetchTimeout)
+	}
+}
+
+func TestAppJSRequestHeadersAskForCompression(t *testing.T) {
+	h := appJSRequestHeaders("", "", "")
+	if got := h["Accept-Encoding"]; !strings.Contains(got, "gzip") {
+		t.Fatalf("Accept-Encoding = %q, want gzip", got)
+	}
+}
+
+func TestLiveFetchAppJS(t *testing.T) {
+	if os.Getenv("KIROX_LIVE_APPJS") != "1" {
+		t.Skip("set KIROX_LIVE_APPJS=1 to download live AWS app.js")
+	}
+	start := time.Now()
+	RefreshAppJSConfig("", "133.0.0.0", "", "")
+	t.Logf("version=%s ident=%s elapsed=%s", GetTESVersion(), GetIdentifier(), time.Since(start))
+	if GetTESVersion() == "" || GetIdentifier() == "" {
+		t.Fatal("empty TES version or identifier")
 	}
 }
 

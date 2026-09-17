@@ -92,7 +92,7 @@
       logs: { title: '运行日志', copyLog: '复制日志', empty: '暂无日志' },
       register: {
         newTask: '新建注册任务', count: '注册数量', concurrency: '并发数', delay: '延迟 (秒)',
-        emailProvider: '邮箱提供商', outlook: '微软邮箱', cloudmail: 'Cloud-Mail',
+        emailProvider: '邮箱提供商', outlook: '微软邮箱', cloudmail: 'Cloud-Mail', mailalias: 'Gmail 临时邮箱',
         selectDomain: '选择域名', selectAllDomain: '全选域名',
         domainHint: '邮箱名将自动生成随机字符串',
         modeRandom: '随机', modeRoundRobin: '轮询', configCount: '{n} 个配置',
@@ -136,6 +136,7 @@
         clearRegisteredMsg: '确认删除 {n} 个已注册（成功/失败）的账号？',
         mailnestTitle: 'MailNest 临时邮箱',
         projectCode: '项目代码',
+        mailaliasTitle: 'Gmail 临时邮箱',
       },
       modal: {
         updateTitle: '发现新版本', updateLater: '稍后', updateDownload: '前往下载'
@@ -211,6 +212,17 @@
         balance: '测试成功，余额为 {n}',
         summaryNone: "未配置",
         summaryActive: "已配置",
+      },
+      mailalias: {
+        requiredUrl: '请填写 API URL',
+        testOk: '连接成功，示例 {n}',
+        summaryNone: '未配置',
+        summaryActive: '已配置',
+        saved: 'Gmail 临时邮箱配置已保存',
+        prefix: '前缀',
+        mode: '别名模式',
+        length: '长度',
+        hint: '对接 mailalias-app：生成 Gmail + 别名并轮询验证码。',
       },
     },
     en: {
@@ -297,7 +309,7 @@
       logs: { title: 'Logs', copyLog: 'Copy logs', empty: 'No logs' },
       register: {
         newTask: 'New registration task', count: 'Count', concurrency: 'Concurrency', delay: 'Delay (s)',
-        emailProvider: 'Email provider', outlook: 'Microsoft', cloudmail: 'Cloud-Mail',
+        emailProvider: 'Email provider', outlook: 'Microsoft', cloudmail: 'Cloud-Mail', mailalias: 'Gmail temp mail',
         selectDomain: 'Select domain', selectAllDomain: 'Select all',
         domainHint: 'Email username is auto-generated as random string',
         modeRandom: 'Random', modeRoundRobin: 'Round-robin', configCount: '{n} configs',
@@ -341,6 +353,7 @@
         clearRegisteredMsg: 'Delete {n} registered (success/failed) accounts?',
         mailnestTitle: 'MailNest temp mail',
         projectCode: 'Project code',
+        mailaliasTitle: 'Gmail temp mail',
       },
       modal: {
         updateTitle: 'New version available', updateLater: 'Later', updateDownload: 'Download'
@@ -416,6 +429,17 @@
         balance: 'Test successful, balance is {n}',
         summaryNone: "Not configured",
         summaryActive: "Configured",
+      },
+      mailalias: {
+        requiredUrl: 'Please enter the API URL',
+        testOk: 'Connected. Sample {n}',
+        summaryNone: 'Not configured',
+        summaryActive: 'Configured',
+        saved: 'Gmail temp mail config saved',
+        prefix: 'Prefix',
+        mode: 'Alias mode',
+        length: 'Length',
+        hint: 'Uses mailalias-app to create Gmail plus-aliases and poll for OTPs.',
       },
     },
     ja: {
@@ -502,7 +526,7 @@
       logs: { title: 'ログ', copyLog: 'ログをコピー', empty: 'ログなし' },
       register: {
         newTask: '新規登録タスク', count: '登録数', concurrency: '同時実行数', delay: '遅延 (秒)',
-        emailProvider: 'メールプロバイダ', outlook: 'Microsoft', cloudmail: 'Cloud-Mail',
+        emailProvider: 'メールプロバイダ', outlook: 'Microsoft', cloudmail: 'Cloud-Mail', mailalias: 'Gmail 使い捨てメール',
         selectDomain: 'ドメイン選択', selectAllDomain: 'すべて選択',
         domainHint: 'ユーザー名はランダム文字列で自動生成されます',
         modeRandom: 'ランダム', modeRoundRobin: 'ラウンドロビン', configCount: '{n} 件の設定',
@@ -546,6 +570,7 @@
         clearRegisteredMsg: '{n} 件の登録済み (成功/失敗) アカウントを削除しますか?',
         mailnestTitle: 'MailNest 使い捨てメール',
         projectCode: 'プロジェクトコード',
+        mailaliasTitle: 'Gmail 使い捨てメール',
       },
       modal: {
         updateTitle: '新しいバージョンがあります', updateLater: '後で', updateDownload: 'ダウンロード'
@@ -621,6 +646,17 @@
         balance: 'テストは成功しました。残高は {n} です。',
         summaryNone: "未設定",
         summaryActive: "設定済み",
+      },
+      mailalias: {
+        requiredUrl: 'API URL を入力してください',
+        testOk: '接続成功、サンプル {n}',
+        summaryNone: '未設定',
+        summaryActive: '設定済み',
+        saved: 'Gmail 使い捨てメール設定を保存しました',
+        prefix: 'プレフィックス',
+        mode: 'エイリアスモード',
+        length: '長さ',
+        hint: 'mailalias-app で Gmail プラスエイリアスを生成し、認証コードを取得します。',
       },
     }
   };
@@ -801,8 +837,10 @@
         ['账号已被封禁', 'account banned'],
         ['创建 MoeMail 邮箱', 'creating MoeMail mailbox'],
         ['创建 cloud-mail 邮箱', 'creating cloud-mail mailbox'],
+        ['创建 Gmail 临时邮箱', 'creating Gmail temp mailbox'],
         ['生成 MoeMail 邮箱失败', 'failed to create MoeMail mailbox'],
         ['生成 cloud-mail 邮箱失败', 'failed to create cloud-mail mailbox'],
+        ['生成 Gmail 临时邮箱失败', 'failed to create Gmail temp mailbox'],
         ['创建邮箱失败', 'failed to create mailbox'],
         ['创建用户失败', 'failed to create user'],
         ['提交邮箱', 'submit email'],

@@ -687,6 +687,10 @@
                       <img class="email-provider-icon email-provider-icon-mailnest" src="assets/mailnest.svg" alt="">
                       <span data-dropdown-label>MailNest</span>
                     </div>
+                    <div class="dropdown-option email-provider-option" data-value="mailalias">
+                      <img class="email-provider-icon" src="assets/gmail.svg" alt="">
+                      <span data-dropdown-label data-i18n="register.mailalias">Gmail 临时邮箱</span>
+                    </div>
                     <div class="dropdown-option email-provider-option" data-value="icloud">
                       <img class="email-provider-icon" src="assets/icloud.svg" alt="">
                       <span data-dropdown-label>iCloud</span>
@@ -1001,6 +1005,83 @@
               </div>
           </div>
 
+          <!-- MailAlias / Gmail 临时邮箱配置 -->
+          <div class="card" style="flex-shrink:0;margin-bottom:20px;">
+              <div class="settings-group">
+                  <div class="settings-group-title"
+                       style="display:flex;align-items:center;justify-content:space-between;">
+                      <div style="display:flex;align-items:center;gap:10px;">
+                          <img class="email-provider-icon" src="assets/gmail.svg" alt="">
+                          <span data-i18n="accounts.mailaliasTitle">Gmail 临时邮箱</span>
+                      </div>
+                      <span id="settings-mailalias-summary"
+                            style="font-size:12px;font-weight:600;color:var(--text-muted);padding:4px 10px;background:var(--bg-subtle);border-radius:6px;"
+                            data-i18n="mailalias.summaryNone">未配置</span>
+                  </div>
+                  <div class="moemail-add-section">
+                      <div class="moemail-add-header">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M12 5v14M5 12h14"/>
+                          </svg>
+                          <span data-i18n="accounts.addConfig">添加新配置</span>
+                      </div>
+                      <div class="moemail-add-body">
+                          <div class="moemail-input-row">
+                              <div class="moemail-input-group" style="flex:2;">
+                                  <label data-i18n="accounts.apiUrl">API URL</label>
+                                  <input type="text" id="mailalias-inline-url" placeholder="http://43.165.0.86:63888"
+                                         class="form-input">
+                              </div>
+                              <div class="moemail-input-group" style="flex:1;">
+                                  <label data-i18n="mailalias.prefix">前缀</label>
+                                  <input type="text" id="mailalias-inline-prefix" placeholder="kiro"
+                                         class="form-input">
+                              </div>
+                          </div>
+                          <div class="moemail-input-row">
+                              <div class="moemail-input-group" style="flex:1;">
+                                  <label data-i18n="mailalias.mode">别名模式</label>
+                                  <select id="mailalias-inline-mode" class="form-input">
+                                      <option value="mixed">mixed</option>
+                                      <option value="lower">lower</option>
+                                      <option value="upper">upper</option>
+                                      <option value="digits">digits</option>
+                                      <option value="name">name</option>
+                                      <option value="word">word</option>
+                                  </select>
+                              </div>
+                              <div class="moemail-input-group" style="flex:1;">
+                                  <label data-i18n="mailalias.length">长度</label>
+                                  <input type="number" id="mailalias-inline-length" min="4" max="24" value="8"
+                                         class="form-input">
+                              </div>
+                          </div>
+                          <div class="moemail-action-row">
+                              <button onclick="inlineTestMailAlias()" class="btn btn-secondary btn-sm"
+                                      id="mailalias-inline-test-btn">
+                                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                      <polyline points="22 4 12 14.01 9 11.01"/>
+                                  </svg>
+                                  <span data-i18n="accounts.testConnection">测试连接</span>
+                              </button>
+                              <button onclick="inlineSaveMailAlias()" class="btn btn-dark btn-sm">
+                                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="M12 5v14M5 12h14"/>
+                                  </svg>
+                                  <span data-i18n="accounts.addConfigBtn">添加配置</span>
+                              </button>
+                              <span id="mailalias-inline-status" class="moemail-status-text"></span>
+                          </div>
+                          <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5;" data-i18n="mailalias.hint">对接 mailalias-app：生成 Gmail + 别名并轮询验证码。</div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
         <!-- 账号列表 -->
         <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:420px;">
           <div class="settings-group-title" style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
@@ -1161,6 +1242,7 @@
 <script src="js/moemail.js"></script>
 <script src="js/cloudmail.js"></script>
 <script src="js/mailnest.js"></script>
+<script src="js/mailalias.js"></script>
 <script src="js/task.js"></script>
 <script src="js/overview.js"></script>
 <script src="js/dropdown.js"></script>

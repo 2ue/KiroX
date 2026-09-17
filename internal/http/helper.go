@@ -91,12 +91,23 @@ func PKCE() (verifier, challenge string) {
 // NewTLSClient 创建带 TLS 指纹伪装的 HTTP 客户端。
 // chromeVer 用于选择与 User-Agent 主版本一致的 TLS profile。
 func NewTLSClient(proxy string, followRedirect bool, chromeVer ...string) tls_client.HttpClient {
+	return NewTLSClientWithTimeout(proxy, followRedirect, int(requestTimeoutSeconds.Load()), chromeVer...)
+}
+
+// NewTLSClientWithTimeout 创建指定超时的 TLS 客户端。
+func NewTLSClientWithTimeout(proxy string, followRedirect bool, timeoutSeconds int, chromeVer ...string) tls_client.HttpClient {
+	if timeoutSeconds < 10 {
+		timeoutSeconds = 10
+	}
+	if timeoutSeconds > 300 {
+		timeoutSeconds = 300
+	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		panic(fmt.Sprintf("创建 Cookie Jar 失败: %v", err))
 	}
 	opts := []tls_client.HttpClientOption{
-		tls_client.WithTimeoutSeconds(int(requestTimeoutSeconds.Load())),
+		tls_client.WithTimeoutSeconds(timeoutSeconds),
 		tls_client.WithClientProfile(tlsProfileForChrome(chromeVer...)),
 		tls_client.WithInsecureSkipVerify(),
 		tls_client.WithCookieJar(jar),

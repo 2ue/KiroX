@@ -375,6 +375,14 @@ function getFormConfig() {
       projectCode: document.getElementById('mailnest-inline-project-code').value
     };
   }
+  if (config.emailProvider === 'mailalias') {
+    if (typeof collectMailAliasFormConfig === 'function') {
+      config.mailAliasConfig = collectMailAliasFormConfig();
+    }
+    if (!config.mailAliasConfig || !config.mailAliasConfig.baseUrl) {
+      throw new Error(_mmT('mailalias.requiredUrl', '请填写 API URL'));
+    }
+  }
   return config;
 }
 

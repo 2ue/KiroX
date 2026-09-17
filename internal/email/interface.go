@@ -162,3 +162,42 @@ func (a *mailNestEmailAdapter) GetAddress() string {
 	}
 	return address
 }
+
+type mailAliasEmailAdapter struct {
+	provider *MailAliasProvider
+}
+
+func NewMailAliasServiceFromProvider(provider *MailAliasProvider) TempEmailService {
+	return &mailAliasEmailAdapter{provider: provider}
+}
+
+func (a *mailAliasEmailAdapter) Create() string {
+	if a.provider == nil {
+		return ""
+	}
+	address, err := a.provider.GetAddress()
+	if err != nil {
+		log.Print(err)
+		return ""
+	}
+	return address
+}
+
+func (a *mailAliasEmailAdapter) WaitForCode(timeout, interval int) (string, error) {
+	if a.provider == nil {
+		return "", nil
+	}
+	return a.provider.WaitForCode(timeout, interval)
+}
+
+func (a *mailAliasEmailAdapter) GetAddress() string {
+	if a.provider == nil {
+		return ""
+	}
+	address, err := a.provider.GetAddress()
+	if err != nil {
+		log.Print(err)
+		return ""
+	}
+	return address
+}

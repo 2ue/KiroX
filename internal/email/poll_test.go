@@ -117,6 +117,28 @@ func TestMailNestAddressCancellation(t *testing.T) {
 	}
 }
 
+func TestMailAliasAddressCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	provider := NewMailAliasProviderContext(ctx, MailAliasConfig{BaseURL: "http://mail.test"})
+	entered := make(chan struct{})
+	provider.client.client.Transport = emailRoundTripFunc(func(req *http.Request) (*http.Response, error) {
+		close(entered)
+		<-req.Context().Done()
+		return nil, req.Context().Err()
+	})
+	result := make(chan error, 1)
+	go func() {
+		_, err := provider.GetAddress()
+		result <- err
+	}()
+	awaitEmailResult(t, entered)
+	cancel()
+	if err := awaitEmailResult(t, result); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected address cancellation, got %v", err)
+	}
+}
+
 func emailCodeWaiter(kind string, ctx context.Context, transport http.RoundTripper) func(int, int) (string, error) {
 	client := &http.Client{Transport: transport}
 	switch kind {
@@ -129,6 +151,11 @@ func emailCodeWaiter(kind string, ctx context.Context, transport http.RoundTripp
 		provider.client.client = client
 		provider.client.token = "test-token"
 		return provider.WaitForCode
+	case "mailalias":
+		provider := NewMailAliasProviderContext(ctx, MailAliasConfig{BaseURL: "http://mail.test"})
+		provider.client.client = client
+		provider.address = "base+tag@gmail.com"
+		return provider.WaitForCode
 	default:
 		provider := NewMailNestProviderContext(ctx, MailNestConfig{})
 		provider.client.client = client
@@ -137,7 +164,7 @@ func emailCodeWaiter(kind string, ctx context.Context, transport http.RoundTripp
 }
 
 func TestHTTPProviderPollingCancellation(t *testing.T) {
-	for _, kind := range []string{"moemail", "cloudmail", "mailnest"} {
+	for _, kind := range []string{"moemail", "cloudmail", "mailnest", "mailalias"} {
 		for _, mode := range []string{"request", "empty", "no-code", "error"} {
 			t.Run(kind+"/"+mode, func(t *testing.T) {
 				ctx, cancel := context.WithCancel(context.Background())
@@ -154,10 +181,16 @@ func TestHTTPProviderPollingCancellation(t *testing.T) {
 					if kind == "mailnest" {
 						body = `{"code":"00000","data":[]}`
 					}
+					if kind == "mailalias" {
+						body = `{"latestOtp":null,"messages":[]}`
+					}
 					if mode == "no-code" {
 						body = `{"messages":[{"subject":"hello"}],"code":200,"data":[{"emailId":1,"subject":"hello"}]}`
 						if kind == "mailnest" {
 							body = `{"code":"00000","data":[{"code_match":""}]}`
+						}
+						if kind == "mailalias" {
+							body = `{"latestOtp":null,"messages":[{"otp":null,"subject":"hello"}]}`
 						}
 					}
 					if mode == "error" {
@@ -186,12 +219,15 @@ func TestHTTPProviderPollingCancellation(t *testing.T) {
 }
 
 func TestHTTPProviderPollingStillReturnsCode(t *testing.T) {
-	for _, kind := range []string{"moemail", "cloudmail", "mailnest"} {
+	for _, kind := range []string{"moemail", "cloudmail", "mailnest", "mailalias"} {
 		t.Run(kind, func(t *testing.T) {
 			transport := emailRoundTripFunc(func(req *http.Request) (*http.Response, error) {
 				body := `{"messages":[{"content":"Code: 654321"}],"code":200,"data":[{"emailId":1,"text":"Code: 654321"}]}`
 				if kind == "mailnest" {
 					body = `{"code":"00000","data":[{"code_match":"654321"}]}`
+				}
+				if kind == "mailalias" {
+					body = `{"latestOtp":"654321","messages":[{"otp":"654321"}]}`
 				}
 				return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(body)), Request: req}, nil
 			})
