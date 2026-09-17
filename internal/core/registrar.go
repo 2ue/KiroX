@@ -340,14 +340,7 @@ func (r *Registrar) logDebugHTTP(method, rawURL string, status int, body []byte)
 	if r.Cfg == nil || !r.Cfg.Debug {
 		return
 	}
-	bodyText := strings.TrimSpace(string(body))
-	if len(bodyText) > 800 {
-		bodyText = bodyText[:800] + "..."
-	}
-	if bodyText == "" {
-		bodyText = "<empty>"
-	}
-	log.Printf("[DEBUG] %s %s -> %d %s", method, safeResponseRoute(rawURL), status, bodyText)
+	log.Printf("[DEBUG] %s %s -> %d %s", method, safeResponseRoute(rawURL), status, formatLogBody(body, 800))
 }
 
 // GenFP 生成指纹
@@ -427,6 +420,43 @@ func (r *Registrar) Step2Device() error {
 	r.UserCode, _ = data["userCode"].(string)
 	log.Printf("user_code=%s", r.UserCode)
 	return nil
+}
+
+// PollDeviceToken 在浏览器完成设备授权后，按 OAuth device_code 轮询 OIDC /token。
+// 不依赖 portal SSO cookie，供指纹浏览器注册路径使用。
+func (r *Registrar) PollDeviceToken(maxWait time.Duration) (map[string]interface{}, error) {
+	if maxWait <= 0 {
+		maxWait = 8 * time.Minute
+	}
+	log.Println("[浏览器] 轮询设备授权令牌")
+	deadline := time.Now().Add(maxWait)
+	for time.Now().Before(deadline) {
+		if r.ctxCancelled() {
+			return nil, fmt.Errorf("任务已取消")
+		}
+		body, status, _, err := r.DoPostRaw(r.Cfg.OIDCBase+"/token", map[string]interface{}{
+			"clientId":     r.ClientID,
+			"clientSecret": r.ClientSecret,
+			"deviceCode":   r.DeviceCode,
+			"grantType":    "urn:ietf:params:oauth:grant-type:device_code",
+		}, map[string]string{"Content-Type": "application/json"})
+		if err != nil {
+			return nil, err
+		}
+		if status == 200 {
+			var result map[string]interface{}
+			if err := json.Unmarshal(body, &result); err != nil {
+				return nil, fmt.Errorf("设备令牌解析失败: %s", string(body))
+			}
+			if tok, _ := result["accessToken"].(string); tok != "" {
+				return result, nil
+			}
+		}
+		if err := r.wait(2 * time.Second); err != nil {
+			return nil, err
+		}
+	}
+	return nil, fmt.Errorf("设备授权令牌轮询超时")
 }
 
 // Step3Email 获取邮箱 (临时邮箱、Outlook)

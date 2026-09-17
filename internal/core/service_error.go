@@ -132,6 +132,33 @@ func unexpectedServiceResponse(context string, body []byte) error {
 	return fmt.Errorf("%s（响应格式异常）", context)
 }
 
+func isTESBlocked(err *ServiceError) bool {
+	if err == nil {
+		return false
+	}
+	if strings.EqualFold(err.Code, "BLOCKED") {
+		return true
+	}
+	return strings.Contains(strings.ToLower(err.Message), "blocked by tes")
+}
+
+// formatLogBody repairs AWS Latin-1 mojibake and truncates for debug logs.
+func formatLogBody(body []byte, limit int) string {
+	text := strings.TrimSpace(string(body))
+	if text == "" {
+		return "<empty>"
+	}
+	text = repairMojibake(text)
+	if limit > 0 && len(text) > limit {
+		cut := text[:limit]
+		for len(cut) > 0 && !utf8.ValidString(cut) {
+			cut = cut[:len(cut)-1]
+		}
+		return cut + "..."
+	}
+	return text
+}
+
 // repairMojibake repairs UTF-8 text that was decoded once as ISO-8859-1.
 func repairMojibake(value string) string {
 	if value == "" {

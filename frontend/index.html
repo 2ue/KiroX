@@ -192,6 +192,12 @@
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span class="nav-tooltip" data-i18n="nav.logs">运行日志</span>
     </div>
+    <!-- 浏览器注册 -->
+    <div class="nav-item" onclick="switchPage('browser')" data-page="browser">
+      <div class="nav-dot"></div>
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8"/><circle cx="12" cy="11" r="2.4"/><path d="M12 8.6v4.8M9.6 11h4.8"/></svg>
+      <span class="nav-tooltip" data-i18n="nav.browser">浏览器注册</span>
+    </div>
 
     <!-- 邮箱池 -->
     <div class="nav-item" onclick="switchPage('accounts')" data-page="accounts">
@@ -620,7 +626,154 @@
       </div>
     </div>
 
+    <!-- ===== Page: 浏览器注册 ===== -->
+    <div class="page" id="page-browser">
+      <div class="page-scroll" style="padding:28px 32px 40px;max-width:1100px;margin:0 auto;">
+        <div class="settings-page-header" style="margin-bottom:18px;">
+          <div>
+            <div class="settings-page-title" data-i18n="browser.title">浏览器注册</div>
+            <div class="settings-page-subtitle" data-i18n="browser.subtitle">独立于协议注册。用 Camoufox 或 Playwright 打开 AWS 页面完成 Builder ID 注册，协议只负责设备码和令牌。</div>
+          </div>
+        </div>
 
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;" data-i18n="browser.engine">指纹浏览器引擎</div>
+          <div class="br-engine-pills">
+            <button type="button" class="br-engine-pill active" data-engine="camoufox" onclick="selectBrowserEngine('camoufox')">
+              <strong>Camoufox</strong>
+              <span data-i18n="browser.camoufoxHint">Firefox 反检测（推荐）</span>
+            </button>
+            <button type="button" class="br-engine-pill" data-engine="playwright" onclick="selectBrowserEngine('playwright')">
+              <strong>Playwright</strong>
+              <span data-i18n="browser.playwrightHint">Chromium 回退</span>
+            </button>
+          </div>
+          <div id="br-engine-status" class="br-engine-status">
+            <span class="br-engine-dot" id="br-dot-python"></span>
+            <span id="br-python-label" data-i18n="browser.checking">正在检测引擎…</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;">
+            <button type="button" id="br-btn-install" class="btn btn-secondary btn-sm" onclick="installBrowserEngine()" data-i18n="browser.install">安装引擎</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="refreshBrowserEngine()" data-i18n="browser.refreshEngine">重新检测</button>
+            <label class="br-headless">
+              <input type="checkbox" id="br-headless">
+              <span data-i18n="browser.headless">无头模式</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="br-form-grid">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="register.count">注册数量</label>
+              <input type="number" id="br-count" value="1" min="1" max="10" class="form-input" style="height:38px;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="ip.proxy">代理</label>
+              <div class="custom-dropdown" id="br-proxy-select">
+                <div class="dropdown-selected" onclick="toggleDropdown(this)">
+                  <span class="dropdown-selected-text" data-i18n="ip.direct">直连</span>
+                  <span class="dropdown-arrow"></span>
+                </div>
+                <div class="dropdown-options" id="br-proxy-select-options"></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="register.emailProvider">邮箱提供商</label>
+              <div class="custom-dropdown" id="br-email-provider" data-value="mailalias" data-onchange="onBrowserEmailProvider" data-rich-options>
+                <div class="dropdown-selected" onclick="toggleDropdown(this)">
+                  <span class="dropdown-selected-text email-provider-value">
+                    <img class="email-provider-icon" src="assets/gmail.svg" alt="">
+                    <span data-dropdown-label data-i18n="register.mailalias">Gmail 临时邮箱</span>
+                  </span>
+                  <span class="dropdown-arrow"></span>
+                </div>
+                <div class="dropdown-options">
+                  <div class="dropdown-option email-provider-option" data-value="mailalias">
+                    <img class="email-provider-icon" src="assets/gmail.svg" alt="">
+                    <span data-dropdown-label data-i18n="register.mailalias">Gmail 临时邮箱</span>
+                  </div>
+                  <div class="dropdown-option email-provider-option" data-value="outlook">
+                    <img class="email-provider-icon" src="assets/outlook.svg" alt="">
+                    <span data-dropdown-label data-i18n="register.outlook">微软邮箱</span>
+                  </div>
+                  <div class="dropdown-option email-provider-option" data-value="moemail">
+                    <img class="email-provider-icon" src="assets/moemail.svg" alt="">
+                    <span data-dropdown-label>MoeMail</span>
+                  </div>
+                  <div class="dropdown-option email-provider-option" data-value="cloudmail">
+                    <img class="email-provider-icon" src="assets/cloudmail.svg" alt="">
+                    <span data-dropdown-label data-i18n="register.cloudmail">Cloud-Mail</span>
+                  </div>
+                  <div class="dropdown-option email-provider-option" data-value="mailnest">
+                    <img class="email-provider-icon email-provider-icon-mailnest" src="assets/mailnest.svg" alt="">
+                    <span data-dropdown-label>MailNest</span>
+                  </div>
+                  <div class="dropdown-option email-provider-option" data-value="icloud">
+                    <img class="email-provider-icon" src="assets/icloud.svg" alt="">
+                    <span data-dropdown-label>iCloud</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="br-mailalias-fields" style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-top:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">API URL</label>
+              <input id="br-mailalias-url" class="form-input" style="height:38px;" placeholder="http://43.165.0.86:63888">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="mailalias.prefix">前缀</label>
+              <input id="br-mailalias-prefix" class="form-input" style="height:38px;" placeholder="minhchau51863">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button type="button" id="br-btn-start" onclick="startBrowserSignup()" class="btn btn-dark" style="flex:1;justify-content:center;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span data-i18n="browser.start">开始浏览器注册</span>
+            </button>
+            <button type="button" id="br-btn-stop" onclick="stopBrowserSignup()" class="btn btn-secondary" style="flex:1;justify-content:center;" disabled data-i18n="overview.stop">停止</button>
+          </div>
+        </div>
+
+        <div class="db-stats-row" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px;">
+          <div class="db-stat-card" style="padding:16px 18px;">
+            <div>
+              <div class="db-stat-label" data-i18n="overview.progress">进度</div>
+              <div class="db-stat-value" id="br-progress" style="font-size:22px;">0/0</div>
+            </div>
+          </div>
+          <div class="db-stat-card" style="padding:16px 18px;">
+            <div>
+              <div class="db-stat-label" data-i18n="overview.success">成功</div>
+              <div class="db-stat-value db-num-green" id="br-success" style="font-size:22px;">0</div>
+            </div>
+          </div>
+          <div class="db-stat-card" style="padding:16px 18px;">
+            <div>
+              <div class="db-stat-label" data-i18n="overview.failed">失败</div>
+              <div class="db-stat-value db-num-red" id="br-failed" style="font-size:22px;">0</div>
+            </div>
+          </div>
+          <div class="db-stat-card" style="padding:16px 18px;">
+            <div>
+              <div class="db-stat-label" data-i18n="overview.elapsed">已耗时</div>
+              <div class="db-stat-value" id="br-elapsed" style="font-size:22px;">0s</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="logs-panel" style="min-height:280px;display:flex;flex-direction:column;">
+          <div class="logs-panel-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-weight:700;" data-i18n="browser.logs">浏览器注册日志</span>
+            <button onclick="copyBrowserLogs()" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 10px;">
+              <span data-i18n="logs.copyLog">复制日志</span>
+            </button>
+          </div>
+          <div id="br-log-box" class="log-box" style="flex:1;min-height:240px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
 
 
     <!-- ===== 新建任务 模态框 ===== -->
@@ -636,12 +789,46 @@
 
           <!-- 左右两栏：左栏表单字段，右栏具体选项（延展到模态框右侧） -->
           <div style="display:flex;align-items:flex-start;margin-bottom:16px;">
-            <!-- 左栏：注册数量 / 并发数 / 延迟 / 代理 / 邮箱提供商（单列） -->
+            <!-- 左栏：注册方式 / 数量 / 并发 / 延迟 / 代理 / 邮箱提供商 -->
             <div style="flex:1;min-width:0;">
+              <div class="form-group" style="margin-bottom:12px;">
+                <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="register.method">注册方式</label>
+                <div class="custom-dropdown" id="cfg-register-method" data-value="protocol" data-onchange="onRegisterMethod">
+                  <div class="dropdown-selected" onclick="toggleDropdown(this)">
+                    <span class="dropdown-selected-text" data-i18n="register.methodProtocol">协议注册</span>
+                    <span class="dropdown-arrow"></span>
+                  </div>
+                  <div class="dropdown-options">
+                    <div class="dropdown-option selected" data-value="protocol" data-i18n="register.methodProtocol">协议注册</div>
+                    <div class="dropdown-option" data-value="browser" data-i18n="register.methodBrowser">浏览器注册</div>
+                  </div>
+                </div>
+              </div>
+              <div id="ntm-browser-hint" class="ntm-browser-hint" style="display:none;" data-i18n="register.methodBrowserHint">用指纹浏览器打开 AWS 页面完成注册。首次使用请先到侧栏「浏览器注册」安装引擎。</div>
+              <div id="ntm-browser-options" style="display:none;">
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="browser.engine">指纹浏览器引擎</label>
+                  <div class="custom-dropdown" id="cfg-browser-engine" data-value="camoufox">
+                    <div class="dropdown-selected" onclick="toggleDropdown(this)">
+                      <span class="dropdown-selected-text">Camoufox</span>
+                      <span class="dropdown-arrow"></span>
+                    </div>
+                    <div class="dropdown-options">
+                      <div class="dropdown-option selected" data-value="camoufox">Camoufox</div>
+                      <div class="dropdown-option" data-value="playwright">Playwright</div>
+                    </div>
+                  </div>
+                </div>
+                <label class="br-headless" style="margin:0 0 12px 0;">
+                  <input type="checkbox" id="ntm-headless">
+                  <span data-i18n="browser.headless">无头模式</span>
+                </label>
+              </div>
               <div class="form-group" style="margin-bottom:12px;">
                 <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="register.count">注册数量</label>
                 <input type="number" id="cfg-count" value="1" min="1" class="form-input" style="height:38px;">
               </div>
+              <div id="ntm-protocol-fields">
               <div class="form-group" style="margin-bottom:12px;">
                 <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="register.concurrency">并发数</label>
                 <input type="number" id="cfg-concurrency" value="1" min="1" max="10" class="form-input" style="height:38px;">
@@ -649,6 +836,7 @@
               <div class="form-group" style="margin-bottom:12px;">
                 <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="register.delay">延迟 (秒)</label>
                 <input type="number" id="cfg-delay" value="1" min="0" class="form-input" style="height:38px;">
+              </div>
               </div>
               <div class="form-group" style="margin-bottom:12px;">
                 <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;" data-i18n="ip.proxy">代理</label>
@@ -1244,6 +1432,7 @@
 <script src="js/mailnest.js"></script>
 <script src="js/mailalias.js"></script>
 <script src="js/task.js"></script>
+<script src="js/browser.js"></script>
 <script src="js/overview.js"></script>
 <script src="js/dropdown.js"></script>
 <script src="js/ui.js"></script>

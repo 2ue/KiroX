@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"reg_go/internal/browser"
+	"reg_go/internal/browsersignup"
 	"reg_go/internal/email"
 	"reg_go/internal/proxy"
 
@@ -455,6 +456,9 @@ func (a *App) GetOSLanguage() string {
 
 // StartTask 启动注册任务
 func (a *App) StartTask(req task.StartTaskRequest) map[string]interface{} {
+	if browsersignup.IsRunning() {
+		return map[string]interface{}{"error": "浏览器注册任务正在运行"}
+	}
 	return task.StartTask(req)
 }
 
@@ -466,6 +470,40 @@ func (a *App) StopTask() map[string]interface{} {
 // CheckUpdate 手动检查更新
 func (a *App) CheckUpdate() map[string]interface{} {
 	return updater.CheckUpdate()
+}
+
+// GetBrowserSignupEngine 返回 Camoufox / Playwright 引擎状态
+func (a *App) GetBrowserSignupEngine() browsersignup.EngineStatus {
+	return browsersignup.EngineInfo()
+}
+
+// InstallBrowserSignupEngine 后台安装 Camoufox 或 Playwright
+func (a *App) InstallBrowserSignupEngine(engine string) map[string]interface{} {
+	return browsersignup.StartInstall(engine)
+}
+
+// StartBrowserSignup 启动指纹浏览器注册（与协议注册独立）
+func (a *App) StartBrowserSignup(req browsersignup.StartRequest) map[string]interface{} {
+	status := task.Manager.GetStatus()
+	if running, _ := status["running"].(bool); running {
+		return map[string]interface{}{"error": "协议注册任务正在运行"}
+	}
+	return browsersignup.Start(req)
+}
+
+// StopBrowserSignup 停止指纹浏览器注册
+func (a *App) StopBrowserSignup() map[string]interface{} {
+	return browsersignup.Stop()
+}
+
+// GetBrowserSignupStatus 浏览器注册任务状态
+func (a *App) GetBrowserSignupStatus() map[string]interface{} {
+	return browsersignup.GetStatus()
+}
+
+// GetBrowserSignupLogs 浏览器注册日志
+func (a *App) GetBrowserSignupLogs() []string {
+	return browsersignup.GetLogs()
 }
 
 // ResetFingerprintCache 清空所有按代理缓存的浏览器指纹，下一次注册重新生成

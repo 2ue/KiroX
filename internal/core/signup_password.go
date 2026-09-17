@@ -40,11 +40,7 @@ func (r *Registrar) Step11CreateIdentity(otp string) error {
 		return err
 	}
 	if status != 200 {
-		bodyText := string(body)
-		if len(bodyText) > 800 {
-			bodyText = bodyText[:800]
-		}
-		log.Printf("[11] create-identity 失败: status=%d, url=%s, body=%s", status, safeResponseRoute(r.Cfg.ProfileBase+"/api/create-identity"), bodyText)
+		log.Printf("[11] create-identity 失败: status=%d, url=%s, body=%s", status, safeResponseRoute(r.Cfg.ProfileBase+"/api/create-identity"), formatLogBody(body, 800))
 		return unexpectedServiceResponse("create-identity 失败", body)
 	}
 

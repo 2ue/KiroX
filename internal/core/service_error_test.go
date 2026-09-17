@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -40,6 +41,45 @@ func TestParseServiceErrorFlatTESBlocked(t *testing.T) {
 	}
 	if err.Code != "BLOCKED" || err.Message != "Request was blocked by TES." {
 		t.Fatalf("unexpected TES error: %#v", err)
+	}
+	if !isTESBlocked(err) {
+		t.Fatal("TES BLOCKED was not classified as a TES block")
+	}
+}
+
+func TestFormatLogBodyRepairsAWSMojibake(t *testing.T) {
+	body := []byte(`{"requestId":"1e0b2715-0181-4f96-86ac-1f42a72d322c","message":{"text":"è¯·å°è¯éæ°ç»å½ãå¦æéè¯¯ä»ç¶å­å¨ï¼è¯·èç³»æ¨çç®¡çå","heading":"åçæå¤éè¯¯","errorCode":"ENTITY_DOES_NOT_EXIST"}}`)
+	got := formatLogBody(body, 800)
+	if !strings.Contains(got, "请尝试重新登录") {
+		t.Fatalf("repaired body missing Chinese text: %q", got)
+	}
+	if !strings.Contains(got, "发生意外错误") {
+		t.Fatalf("repaired heading missing Chinese text: %q", got)
+	}
+	if strings.Contains(got, "è¯·") {
+		t.Fatalf("mojibake left in log body: %q", got)
+	}
+}
+
+func TestFormatLogBodyLeavesTESEnglishAlone(t *testing.T) {
+	body := []byte(`{"errorCode":"BLOCKED","message":"Request was blocked by TES."}`)
+	got := formatLogBody(body, 800)
+	if got != string(body) {
+		t.Fatalf("formatLogBody() = %q", got)
+	}
+}
+
+func TestFormatErrorTESBlocked(t *testing.T) {
+	r := &Registrar{}
+	got := r.formatError("SendOTP", fmt.Errorf("send-otp 失败 (400): %w", &ServiceError{
+		Code:    "BLOCKED",
+		Message: "Request was blocked by TES.",
+	}))
+	if !strings.Contains(got, "注册被拦截") || !strings.Contains(got, "BLOCKED") {
+		t.Fatalf("formatError() = %q", got)
+	}
+	if strings.Contains(got, "è¯·") {
+		t.Fatalf("formatError leaked mojibake: %q", got)
 	}
 }
 

@@ -236,6 +236,27 @@ function notifyTaskComplete(taskName, success, failed, total) {
 
 async function startTask() {
   try {
+    var methodEl = document.getElementById('cfg-register-method');
+    var method = (methodEl && methodEl.dataset.value) || 'protocol';
+    if (method === 'browser') {
+      var browserCfg = getFormConfig();
+      var engineEl = document.getElementById('cfg-browser-engine');
+      browserCfg.engine = (engineEl && engineEl.dataset.value) || 'camoufox';
+      browserCfg.headless = !!(document.getElementById('ntm-headless') && document.getElementById('ntm-headless').checked);
+      if (browserCfg.count > 10) browserCfg.count = 10;
+      if (typeof selectBrowserEngine === 'function') selectBrowserEngine(browserCfg.engine);
+      var browserResult = await window.go.main.App.StartBrowserSignup(browserCfg);
+      if (browserResult && browserResult.error) {
+        showToast(browserResult.error, 'error');
+        return;
+      }
+      closeNewTaskModal();
+      if (typeof switchPage === 'function') switchPage('browser');
+      showToast(_tkT('browser.started', '浏览器注册已启动'), 'success');
+      if (typeof pollBrowserSignup === 'function') pollBrowserSignup();
+      return;
+    }
+
     var cfg = getFormConfig();
 
     var result = await window.go.main.App.StartTask(cfg);

@@ -543,20 +543,26 @@ async function batchDeleteIp() {
 
 // ===== 填充新建任务模态框的代理下拉 =====
 async function loadProxyOptions() {
-  var wrap = document.getElementById('cfg-proxy-select');
-  var box = document.getElementById('cfg-proxy-select-options');
-  if (!wrap || !box) return;
   var list = [];
   try { list = await window.go.main.App.ListProxyPool(); } catch (e) {}
   var enabled = (list || []).filter(function(p) { return p.enabled; });
+  fillProxyDropdown('cfg-proxy-select', 'cfg-proxy-select-options', enabled);
+  fillProxyDropdown('br-proxy-select', 'br-proxy-select-options', enabled);
+}
+
+function fillProxyDropdown(wrapId, boxId, enabled) {
+  var wrap = document.getElementById(wrapId);
+  var box = document.getElementById(boxId);
+  if (!wrap || !box) return;
+  var prev = wrap.dataset.value || '';
   var html = '<div class="dropdown-option" data-value="" data-i18n="ip.direct">' + _ipT('ip.direct', '直连') + '</div>';
-  enabled.forEach(function(p) {
+  (enabled || []).forEach(function(p) {
     var u = parseProxyUrl(p.url);
     var label = p.probeIp || (u.host + (u.port ? ':' + u.port : ''));
     html += '<div class="dropdown-option" data-value="' + _ipEscape(p.url) + '">' + _ipEscape(label) + '</div>';
   });
   box.innerHTML = html;
-  setDropdownValue(wrap, '');
+  if (typeof setDropdownValue === 'function') setDropdownValue(wrap, prev);
 }
 
 window.addEventListener('i18n:changed', function() {

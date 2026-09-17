@@ -26,7 +26,7 @@ function getPageTitle(pageId) {
     var v = window.I18N.t('page.' + pageId);
     if (v && v !== 'page.' + pageId) return v;
   }
-  var fallback = { overview: '概览', logs: '运行日志', register: '注册', accounts: '邮箱池', ip: 'IP 管理', info: '关于', settings: '设置' };
+  var fallback = { overview: '概览', logs: '运行日志', browser: '浏览器注册', register: '注册', accounts: '邮箱池', ip: 'IP 管理', info: '关于', settings: '设置' };
   return fallback[pageId] || pageId;
 }
 function switchPage(pageId) {
@@ -57,6 +57,9 @@ function switchPage(pageId) {
   }
   if (pageId === 'info') {
     loadInfoVersion();
+  }
+  if (pageId === 'browser' && typeof initBrowserPage === 'function') {
+    initBrowserPage();
   }
   updateSettingsDirtyState();
 }
@@ -296,8 +299,31 @@ function openNewTaskModal() {
   if (typeof initEmailProviderSelection === 'function') initEmailProviderSelection();
   // 刷新代理下拉，保证新增代理后选项最新
   if (typeof loadProxyOptions === 'function') loadProxyOptions();
+  var methodEl = document.getElementById('cfg-register-method');
+  if (typeof onRegisterMethod === 'function') {
+    onRegisterMethod((methodEl && methodEl.dataset.value) || 'protocol');
+  }
   var m = document.getElementById('new-task-modal');
   if (m) m.classList.add('show');
+}
+
+function onRegisterMethod(value) {
+  var browser = value === 'browser';
+  var proto = document.getElementById('ntm-protocol-fields');
+  var options = document.getElementById('ntm-browser-options');
+  var hint = document.getElementById('ntm-browser-hint');
+  if (proto) proto.style.display = browser ? 'none' : '';
+  if (options) options.style.display = browser ? 'block' : 'none';
+  if (hint) hint.style.display = browser ? 'block' : 'none';
+  var count = document.getElementById('cfg-count');
+  if (count) {
+    if (browser) {
+      count.max = 10;
+      if ((parseInt(count.value, 10) || 1) > 10) count.value = 10;
+    } else {
+      count.removeAttribute('max');
+    }
+  }
 }
 function closeNewTaskModal() {
   var m = document.getElementById('new-task-modal');

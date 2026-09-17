@@ -19,6 +19,11 @@ func scrubURLs(s string) string {
 	return urlRegex.ReplaceAllString(s, "<endpoint>")
 }
 
+// FriendlyError 将技术错误转换为可展示给用户的信息。
+func (r *Registrar) FriendlyError(step string, err error) string {
+	return r.formatError(step, err)
+}
+
 // formatError 将技术错误转换为用户友好的错误信息
 func (r *Registrar) formatError(step string, err error) string {
 	if r.ctxCancelled() {
@@ -32,6 +37,9 @@ func (r *Registrar) formatError(step string, err error) string {
 				message += "，响应包含 CAPTCHA 验证信息"
 			}
 			return message + serviceErrorMetadata(serviceErr)
+		}
+		if isTESBlocked(serviceErr) {
+			return "注册被拦截: TES 拒绝了本次请求，请更换家宽代理后重试" + serviceErrorMetadata(serviceErr)
 		}
 		message := friendlyStepName(step) + "失败"
 		if serviceErr.Message != "" {

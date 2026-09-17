@@ -376,3 +376,72 @@
 #ov-moemail-domains-pagination button:active:not([disabled]) {
   transform: translateY(0);
 }
+
+.br-engine-pills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.br-engine-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-subtle);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.br-engine-pill strong { font-size: 14px; }
+.br-engine-pill span { font-size: 12px; color: var(--text-muted); }
+.br-engine-pill.active {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+[data-theme="dark"] .br-engine-pill.active {
+  background: rgba(96, 165, 250, 0.12);
+}
+.br-engine-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-height: 20px;
+}
+.br-engine-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+}
+.br-engine-dot.ok { background: #10b981; }
+.br-headless {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+.br-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.ntm-browser-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: -4px 0 12px;
+}
+@media (max-width: 820px) {
+  .br-engine-pills { grid-template-columns: 1fr; }
+  .br-form-grid { grid-template-columns: 1fr; }
+  #br-mailalias-fields { grid-template-columns: 1fr !important; }
+}

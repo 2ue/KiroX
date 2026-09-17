@@ -10,13 +10,13 @@
   var DICT = {
     zh: {
       nav: {
-        overview: '概览', logs: '运行日志', register: '注册', accounts: '邮箱池',
+        overview: '概览', logs: '运行日志', browser: '浏览器注册', register: '注册', accounts: '邮箱池',
         about: '关于', settings: '设置', toggleTheme: '切换主题', checkUpdate: '检查更新',
         language: '语言：中文 (点击切换)',
         ip: 'IP 管理'
       },
       page: {
-        overview: '概览', logs: '运行日志', register: '注册', accounts: '邮箱池',
+        overview: '概览', logs: '运行日志', browser: '浏览器注册', register: '注册', accounts: '邮箱池',
         settings: '设置', ip: 'IP 管理', info: '关于'
       },
       ip: {
@@ -98,6 +98,30 @@
         modeRandom: '随机', modeRoundRobin: '轮询', configCount: '{n} 个配置',
         startBtn: '开始注册', stopBtn: '停止',
         icloud: 'iCloud',
+        method: '注册方式',
+        methodProtocol: '协议注册',
+        methodBrowser: '浏览器注册',
+        methodBrowserHint: '用指纹浏览器打开 AWS 页面完成注册。首次使用请先到侧栏「浏览器注册」安装引擎。浏览器任务串行，最多 10 个。',
+      },
+      browser: {
+        title: '浏览器注册',
+        subtitle: '独立于协议注册。用 Camoufox 或 Playwright 打开 AWS 页面完成 Builder ID 注册，协议只负责设备码和令牌。',
+        engine: '指纹浏览器引擎',
+        camoufoxHint: 'Firefox 反检测（推荐）',
+        playwrightHint: 'Chromium 回退',
+        checking: '正在检测引擎…',
+        installing: '正在安装引擎…',
+        pythonMissing: '未找到 Python 3，请先安装 Python 3.10+',
+        ready: '已就绪',
+        notReady: '未安装',
+        install: '安装引擎',
+        refreshEngine: '重新检测',
+        headless: '无头模式',
+        start: '开始浏览器注册',
+        logs: '浏览器注册日志',
+        installStarted: '已开始安装引擎，请查看下方日志',
+        installFailed: '安装失败',
+        started: '浏览器注册已启动'
       },
       accounts: {
         moemailTitle: 'MoeMail 临时邮箱', cloudmailTitle: 'Cloud-Mail 自部署邮箱', addConfig: '添加新配置',
@@ -227,13 +251,13 @@
     },
     en: {
       nav: {
-        overview: 'Overview', logs: 'Logs', register: 'Register', accounts: 'Emails',
+        overview: 'Overview', logs: 'Logs', browser: 'Browser signup', register: 'Register', accounts: 'Emails',
         about: 'About', settings: 'Settings', toggleTheme: 'Toggle theme', checkUpdate: 'Check update',
         language: 'Language: English (click to switch)',
         ip: 'IPs'
       },
       page: {
-        overview: 'Overview', logs: 'Logs', register: 'Register', accounts: 'Emails',
+        overview: 'Overview', logs: 'Logs', browser: 'Browser signup', register: 'Register', accounts: 'Emails',
         settings: 'Settings', ip: 'IPs', info: 'About'
       },
       ip: {
@@ -315,6 +339,30 @@
         modeRandom: 'Random', modeRoundRobin: 'Round-robin', configCount: '{n} configs',
         startBtn: 'Start', stopBtn: 'Stop',
         icloud: 'iCloud',
+        method: 'Signup method',
+        methodProtocol: 'Protocol',
+        methodBrowser: 'Browser',
+        methodBrowserHint: 'Opens AWS in a fingerprint browser. Install Camoufox or Playwright on the Browser signup tab first. Sequential, max 10.',
+      },
+      browser: {
+        title: 'Browser signup',
+        subtitle: 'Separate from protocol signup. Camoufox or Playwright completes AWS Builder ID in a real browser; the protocol only handles the device code and tokens.',
+        engine: 'Fingerprint browser',
+        camoufoxHint: 'Anti-detect Firefox (recommended)',
+        playwrightHint: 'Chromium fallback',
+        checking: 'Checking engine…',
+        installing: 'Installing engine…',
+        pythonMissing: 'Python 3 not found. Install Python 3.10+ first.',
+        ready: 'ready',
+        notReady: 'not installed',
+        install: 'Install engine',
+        refreshEngine: 'Recheck',
+        headless: 'Headless',
+        start: 'Start browser signup',
+        logs: 'Browser signup logs',
+        installStarted: 'Engine install started. Watch the log below.',
+        installFailed: 'Install failed',
+        started: 'Browser signup started'
       },
       accounts: {
         moemailTitle: 'MoeMail temp mail', cloudmailTitle: 'Cloud-Mail (self-hosted)', addConfig: 'Add config',
@@ -444,13 +492,13 @@
     },
     ja: {
       nav: {
-        overview: '概要', logs: 'ログ', register: '登録', accounts: 'メール',
+        overview: '概要', logs: 'ログ', browser: 'ブラウザ登録', register: '登録', accounts: 'メール',
         about: '情報', settings: '設定', toggleTheme: 'テーマ切替', checkUpdate: '更新確認',
         language: '言語：日本語 (クリックで切替)',
         ip: 'IP管理'
       },
       page: {
-        overview: '概要', logs: 'ログ', register: '登録', accounts: 'メール',
+        overview: '概要', logs: 'ログ', browser: 'ブラウザ登録', register: '登録', accounts: 'メール',
         settings: '設定', ip: 'IP管理', info: '情報'
       },
       ip: {
@@ -532,6 +580,30 @@
         modeRandom: 'ランダム', modeRoundRobin: 'ラウンドロビン', configCount: '{n} 件の設定',
         startBtn: '登録開始', stopBtn: '停止',
         icloud: 'iCloud',
+        method: '登録方式',
+        methodProtocol: 'プロトコル登録',
+        methodBrowser: 'ブラウザ登録',
+        methodBrowserHint: 'フィンガープリントブラウザで AWS 画面を開きます。初回はサイドバー「ブラウザ登録」でエンジンをインストールしてください。逐次実行、最大 10 件。',
+      },
+      browser: {
+        title: 'ブラウザ登録',
+        subtitle: 'プロトコル登録とは独立しています。Camoufox / Playwright が AWS の画面で Builder ID を作成し、プロトコル側はデバイスコードとトークンのみを扱います。',
+        engine: 'フィンガープリントブラウザ',
+        camoufoxHint: '検知回避 Firefox（推奨）',
+        playwrightHint: 'Chromium フォールバック',
+        checking: 'エンジンを確認中…',
+        installing: 'エンジンをインストール中…',
+        pythonMissing: 'Python 3 が見つかりません。Python 3.10+ をインストールしてください。',
+        ready: '準備完了',
+        notReady: '未インストール',
+        install: 'エンジンをインストール',
+        refreshEngine: '再検出',
+        headless: 'ヘッドレス',
+        start: 'ブラウザ登録を開始',
+        logs: 'ブラウザ登録ログ',
+        installStarted: 'インストールを開始しました。下のログを確認してください。',
+        installFailed: 'インストール失敗',
+        started: 'ブラウザ登録を開始しました'
       },
       accounts: {
         moemailTitle: 'MoeMail 使い捨てメール', cloudmailTitle: 'Cloud-Mail (自己ホスト型)', addConfig: '新規追加',

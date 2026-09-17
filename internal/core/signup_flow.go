@@ -66,7 +66,7 @@ func (r *Registrar) Step6SubmitEmail() (string, error) {
 	} else if status == 200 {
 		return "login", nil
 	}
-	return "", fmt.Errorf("提交邮箱失败: %d - %s", status, string(body)[:min(200, len(body))])
+	return "", fmt.Errorf("提交邮箱失败: %d - %s", status, formatLogBody(body, 200))
 }
 
 // Step7Signup 注册
@@ -258,6 +258,25 @@ func elapsedMillisSince(start, now time.Time) int64 {
 	return now.Sub(start).Milliseconds()
 }
 
+// profileOTPDwell is the extra wait before send-otp so claimed timeSpentOnPage
+// matches the actual gap after /api/start. TES compares both.
+func profileOTPDwell(elapsedMs, targetMs int64) time.Duration {
+	if targetMs <= elapsedMs {
+		return 0
+	}
+	return time.Duration(targetMs-elapsedMs) * time.Millisecond
+}
+
+func profileOTPTimeOnPage(elapsedMs, targetMs int64) int {
+	if elapsedMs > 0 {
+		return int(elapsedMs)
+	}
+	if targetMs > 0 {
+		return int(targetMs)
+	}
+	return 1
+}
+
 func profileStartResponseError(status int, body []byte) error {
 	if status >= 400 {
 		bodyText := strings.ToLower(string(body))
@@ -328,7 +347,14 @@ func (r *Registrar) Step9SendOTP() error {
 	}
 
 	ref := fmt.Sprintf("%s/?workflowID=%s", r.Cfg.ProfileBase, r.WorkflowID)
-	timeOnPage := 5000 + rand.Intn(3001)
+	targetMs := int64(5000 + rand.Intn(3001))
+	if remaining := profileOTPDwell(elapsedMillisSince(r.ProfileEmailStartedAt, time.Now()), targetMs); remaining > 0 {
+		log.Printf("[9] 等待 %s 后发送验证码", remaining.Round(time.Millisecond))
+		if err := r.wait(remaining); err != nil {
+			return err
+		}
+	}
+	timeOnPage := profileOTPTimeOnPage(elapsedMillisSince(r.ProfileEmailStartedAt, time.Now()), targetMs)
 	fp := r.GenFPWithTime("profile", "PageSubmit", timeOnPage, len(r.Email), r.Email)
 	tsp := fmt.Sprintf("%d", timeOnPage)
 
@@ -354,11 +380,11 @@ func (r *Registrar) Step9SendOTP() error {
 		return err
 	}
 	if status != 200 {
-		bodyText := string(respBody)
-		if len(bodyText) > 800 {
-			bodyText = bodyText[:800]
-		}
+		bodyText := formatLogBody(respBody, 800)
 		log.Printf("[9] send-otp 失败: status=%d, fp_len=%d, url=%s, body=%s", status, len(fp), safeResponseRoute(r.Cfg.ProfileBase+"/api/send-otp"), bodyText)
+		if serviceErr := parseServiceError(respBody); serviceErr != nil {
+			return fmt.Errorf("send-otp 失败 (%d): %w", status, serviceErr)
+		}
 		return fmt.Errorf("send-otp 失败 (%d)", status)
 	}
 	r.ProfileVerificationStartedAt = time.Now()
